@@ -1,0 +1,177 @@
+[
+  {
+    "file": "metadata/data_lineage.csv",
+    "rows": 3,
+    "columns": 5,
+    "leakage_name_risks": 0,
+    "schema_hash": "148e1b5aee43eef9728ba43cdae90152e1d2b6ef2d7c4c714008136e6c7138a2"
+  },
+  {
+    "file": "metadata/dataset_manifest.csv",
+    "rows": 21,
+    "columns": 10,
+    "leakage_name_risks": 2,
+    "schema_hash": "d65bcdc5b4c9d26177cd13c3d4196c25380f3288aff88bbba56cfa3d7131ccb8"
+  },
+  {
+    "file": "metadata/feature_dictionary.csv",
+    "rows": 333,
+    "columns": 7,
+    "leakage_name_risks": 0,
+    "schema_hash": "f1aa3bf817a65b3dfa99bd5e1e254f15505a755e84d49bee8e4a467f5cdca5c9"
+  },
+  {
+    "file": "ml_ready/equipment_test.csv",
+    "rows": 72270,
+    "columns": 38,
+    "leakage_name_risks": 2,
+    "schema_hash": "512cb00d86d578a5dec493da0f0a8838c2eb6daf3f42c2460a21bb2e3ecc3d43"
+  },
+  {
+    "file": "ml_ready/equipment_train.csv",
+    "rows": 216810,
+    "columns": 38,
+    "leakage_name_risks": 2,
+    "schema_hash": "512cb00d86d578a5dec493da0f0a8838c2eb6daf3f42c2460a21bb2e3ecc3d43"
+  },
+  {
+    "file": "ml_ready/equipment_validation.csv",
+    "rows": 72270,
+    "columns": 38,
+    "leakage_name_risks": 2,
+    "schema_hash": "512cb00d86d578a5dec493da0f0a8838c2eb6daf3f42c2460a21bb2e3ecc3d43"
+  },
+  {
+    "file": "ml_ready/production_test.csv",
+    "rows": 26937,
+    "columns": 63,
+    "leakage_name_risks": 5,
+    "schema_hash": "8d1a9ef2e93b2e8d4bcbc1fa1450e2241a23ce294d792f65ad4932697440a33b"
+  },
+  {
+    "file": "ml_ready/production_train.csv",
+    "rows": 80811,
+    "columns": 63,
+    "leakage_name_risks": 5,
+    "schema_hash": "8d1a9ef2e93b2e8d4bcbc1fa1450e2241a23ce294d792f65ad4932697440a33b"
+  },
+  {
+    "file": "ml_ready/production_validation.csv",
+    "rows": 26937,
+    "columns": 63,
+    "leakage_name_risks": 5,
+    "schema_hash": "8d1a9ef2e93b2e8d4bcbc1fa1450e2241a23ce294d792f65ad4932697440a33b"
+  },
+  {
+    "file": "ml_ready/prospectivity_test.csv",
+    "rows": 2010,
+    "columns": 43,
+    "leakage_name_risks": 0,
+    "schema_hash": "b00bf21667d9065789ebc2759c232686cb680ef3696e6b166941df02711f95dc"
+  },
+  {
+    "file": "ml_ready/prospectivity_train.csv",
+    "rows": 6532,
+    "columns": 43,
+    "leakage_name_risks": 0,
+    "schema_hash": "b00bf21667d9065789ebc2759c232686cb680ef3696e6b166941df02711f95dc"
+  },
+  {
+    "file": "ml_ready/prospectivity_validation.csv",
+    "rows": 6631,
+    "columns": 43,
+    "leakage_name_risks": 0,
+    "schema_hash": "b00bf21667d9065789ebc2759c232686cb680ef3696e6b166941df02711f95dc"
+  },
+  {
+    "file": "reports/leakage_report.csv",
+    "rows": 8,
+    "columns": 5,
+    "leakage_name_risks": 0,
+    "schema_hash": "224e369a83a515e086db93591358310ce2d73c4facb9807d548b4096e20e03ad"
+  },
+  {
+    "file": "synthetic/allocation/16_synthetic_equipment_allocation.csv",
+    "rows": 21900,
+    "columns": 16,
+    "leakage_name_risks": 2,
+    "schema_hash": "81c20534ede0afd07966c038feced2e6931b08ffba86e7ebb9b1ff28672675c9"
+  },
+  {
+    "file": "synthetic/blasting/12_synthetic_blasting.csv",
+    "rows": 7774,
+    "columns": 20,
+    "leakage_name_risks": 3,
+    "schema_hash": "651f9c2a5289a2b7227a5c9676d50c5d12b37a5edd9b2ed7bb8a461755375e7b"
+  },
+  {
+    "file": "synthetic/blocks/15_synthetic_mine_block_model.csv",
+    "rows": 75000,
+    "columns": 43,
+    "leakage_name_risks": 3,
+    "schema_hash": "20f66b44fdebc959407b4bb788ea20f7efd938ad304f13fbb60a5a96e8cce14c"
+  },
+  {
+    "file": "synthetic/boreholes/04_synthetic_borehole_benchmark.csv",
+    "rows": 21144,
+    "columns": 28,
+    "leakage_name_risks": 0,
+    "schema_hash": "8606143f621e0f3c34cb7af5468da14d830b0edf38bf755142e936a5d27434ac"
+  },
+  {
+    "file": "synthetic/equipment/10_synthetic_equipment_telemetry.csv",
+    "rows": 361350,
+    "columns": 38,
+    "leakage_name_risks": 2,
+    "schema_hash": "512cb00d86d578a5dec493da0f0a8838c2eb6daf3f42c2460a21bb2e3ecc3d43"
+  },
+  {
+    "file": "synthetic/maintenance/11_synthetic_maintenance.csv",
+    "rows": 20000,
+    "columns": 17,
+    "leakage_name_risks": 1,
+    "schema_hash": "61a6c1ee828a7b1da32dcc95b049ff2a00407c435d10d997bfddce3826b5562a"
+  },
+  {
+    "file": "synthetic/production_operations/09_synthetic_mine_operations.csv",
+    "rows": 134685,
+    "columns": 63,
+    "leakage_name_risks": 5,
+    "schema_hash": "8d1a9ef2e93b2e8d4bcbc1fa1450e2241a23ce294d792f65ad4932697440a33b"
+  },
+  {
+    "file": "synthetic/scenarios/17_manganese_prospectivity_training.csv",
+    "rows": 15173,
+    "columns": 43,
+    "leakage_name_risks": 0,
+    "schema_hash": "b00bf21667d9065789ebc2759c232686cb680ef3696e6b166941df02711f95dc"
+  },
+  {
+    "file": "synthetic/scenarios/18_decision_optimizer_scenarios.csv",
+    "rows": 22140,
+    "columns": 18,
+    "leakage_name_risks": 3,
+    "schema_hash": "040a49df1b2a13593771a53516869421aa8722ac2046bc1035779cf4717d9745"
+  },
+  {
+    "file": "synthetic/scenarios/19_digital_twin_scenarios.csv",
+    "rows": 8610,
+    "columns": 12,
+    "leakage_name_risks": 3,
+    "schema_hash": "03aab3a40f3488f36512cba7a955b299c8aa662748fce2f176fcfafad573f869"
+  },
+  {
+    "file": "synthetic/schedules/14_synthetic_mine_schedule.csv",
+    "rows": 89790,
+    "columns": 18,
+    "leakage_name_risks": 1,
+    "schema_hash": "83606f3ecc19c20962f1b19537b05c1a0a6307bcadd54a90395946fef65388f0"
+  },
+  {
+    "file": "synthetic/stockpile/13_synthetic_ore_stockpile.csv",
+    "rows": 29930,
+    "columns": 17,
+    "leakage_name_risks": 0,
+    "schema_hash": "cf254bc446c31a47d95241a92fe01d84218de2b8d5b4892e9c17444782bc92c8"
+  }
+]
