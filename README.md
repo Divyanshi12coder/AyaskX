@@ -1,4 +1,4 @@
-# Ayask Foundation v0.1
+# AyaskX Foundation v0.1
 
 First implementation boundary for the Ayask R&D platform.
 
