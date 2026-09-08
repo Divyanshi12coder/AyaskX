@@ -22,8 +22,7 @@ artifacts/
 data/
 source_friend_v1/
 
-# Frontend - separate repository/phase
-frontend/
+
 node_modules/
 dist/
 
