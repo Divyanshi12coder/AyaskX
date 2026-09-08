@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+﻿from dataclasses import dataclass
 from typing import Literal
 
 import pandas as pd
@@ -35,177 +35,141 @@ class ModelCandidateGenerator:
     ) -> ModelCandidateReport:
 
         if target not in df.columns:
-            raise ValueError(
-                f"Target column not found: {target}"
-            )
+            raise ValueError(f"Target column not found: {target}")
+
+        if df.empty:
+            raise ValueError("Cannot generate candidates for an empty dataset.")
 
         target_series = df[target]
-
-        task = task_type or self._infer_task(
-            target_series
-        )
-
-        candidates = []
-
-        # ==========================================================
-        # CLASSIFICATION
-        # ==========================================================
+        task = task_type or self._infer_task(target_series)
 
         if task == "classification":
-
-            candidates.extend([
+            candidates = [
                 ModelCandidate(
-                    name="logistic_regression",
-                    family="linear",
-                    task="classification",
-                    reason=(
-                        "Strong baseline for "
-                        "linearly separable classification."
-                    ),
-                    priority=1,
+                    "logistic_regression",
+                    "linear",
+                    "classification",
+                    "Interpretable linear classification baseline.",
+                    1,
                 ),
                 ModelCandidate(
-                    name="random_forest_classifier",
-                    family="tree_ensemble",
-                    task="classification",
-                    reason=(
-                        "Handles nonlinear relationships "
-                        "and mixed feature interactions."
-                    ),
-                    priority=2,
+                    "random_forest_classifier",
+                    "tree_ensemble",
+                    "classification",
+                    "Robust nonlinear model for mixed tabular relationships.",
+                    2,
                 ),
                 ModelCandidate(
-                    name="gradient_boosting_classifier",
-                    family="boosting",
-                    task="classification",
-                    reason=(
-                        "Strong general-purpose model "
-                        "for tabular classification."
-                    ),
-                    priority=3,
+                    "gradient_boosting_classifier",
+                    "boosting",
+                    "classification",
+                    "Strong nonlinear tabular classifier.",
+                    3,
                 ),
-            ])
-
-            # Add extra candidate for sufficiently
-            # large datasets.
-            if len(df) >= 500:
-
-                candidates.append(
-                    ModelCandidate(
-                        name="hist_gradient_boosting_classifier",
-                        family="boosting",
-                        task="classification",
-                        reason=(
-                            "Efficient boosting candidate "
-                            "for larger tabular datasets."
-                        ),
-                        priority=4,
-                    )
-                )
-
-        # ==========================================================
-        # REGRESSION
-        # ==========================================================
+                ModelCandidate(
+                    "hist_gradient_boosting_classifier",
+                    "boosting",
+                    "classification",
+                    "Efficient boosting candidate for larger datasets.",
+                    4,
+                ),
+                ModelCandidate(
+                    "extra_trees_classifier",
+                    "tree_ensemble",
+                    "classification",
+                    "Randomized tree ensemble with strong nonlinear coverage.",
+                    5,
+                ),
+            ]
 
         elif task == "regression":
-
-            candidates.extend([
+            candidates = [
                 ModelCandidate(
-                    name="linear_regression",
-                    family="linear",
-                    task="regression",
-                    reason=(
-                        "Interpretable baseline for "
-                        "continuous targets."
-                    ),
-                    priority=1,
+                    "linear_regression",
+                    "linear",
+                    "regression",
+                    "Interpretable continuous-target baseline.",
+                    1,
                 ),
                 ModelCandidate(
-                    name="random_forest_regressor",
-                    family="tree_ensemble",
-                    task="regression",
-                    reason=(
-                        "Captures nonlinear relationships "
-                        "without requiring feature scaling."
-                    ),
-                    priority=2,
+                    "random_forest_regressor",
+                    "tree_ensemble",
+                    "regression",
+                    "Robust nonlinear regression without feature scaling requirements.",
+                    2,
                 ),
                 ModelCandidate(
-                    name="gradient_boosting_regressor",
-                    family="boosting",
-                    task="regression",
-                    reason=(
-                        "Strong general-purpose model "
-                        "for nonlinear tabular regression."
-                    ),
-                    priority=3,
+                    "gradient_boosting_regressor",
+                    "boosting",
+                    "regression",
+                    "Strong general-purpose nonlinear tabular regressor.",
+                    3,
                 ),
-            ])
-
-            if len(df) >= 500:
-
-                candidates.append(
-                    ModelCandidate(
-                        name="hist_gradient_boosting_regressor",
-                        family="boosting",
-                        task="regression",
-                        reason=(
-                            "Efficient boosting candidate "
-                            "for larger datasets."
-                        ),
-                        priority=4,
-                    )
-                )
+                ModelCandidate(
+                    "hist_gradient_boosting_regressor",
+                    "boosting",
+                    "regression",
+                    "Efficient boosting candidate for larger datasets.",
+                    4,
+                ),
+                ModelCandidate(
+                    "extra_trees_regressor",
+                    "tree_ensemble",
+                    "regression",
+                    "Highly randomized ensemble useful for nonlinear relationships.",
+                    5,
+                ),
+            ]
 
         else:
-            raise ValueError(
-                f"Unsupported task type: {task}"
-            )
+            raise ValueError(f"Unsupported task type: {task}")
+
+        # Dataset-adaptive pruning.
+        # Very small datasets should avoid unnecessary model proliferation.
+        if len(df) < 100:
+            candidates = [
+                candidate
+                for candidate in candidates
+                if candidate.priority <= 3
+            ]
 
         return ModelCandidateReport(
             task=task,
             candidates=tuple(
-                sorted(
-                    candidates,
-                    key=lambda item: item.priority,
-                )
+                sorted(candidates, key=lambda item: item.priority)
             ),
         )
 
     @staticmethod
-    def _infer_task(
-        target: pd.Series,
-    ) -> ModelTask:
+    def _infer_task(target: pd.Series) -> ModelTask:
 
-        # Boolean → classification
+        if target.dropna().empty:
+            raise ValueError("Target column contains no usable values.")
+
         if pd.api.types.is_bool_dtype(target):
             return "classification"
 
-        # Strings/categories → classification
         if (
             pd.api.types.is_object_dtype(target)
             or pd.api.types.is_string_dtype(target)
-            or isinstance(
-                target.dtype,
-                pd.CategoricalDtype,
-            )
+            or isinstance(target.dtype, pd.CategoricalDtype)
         ):
             return "classification"
 
-        # Non-numeric → classification
-        if not pd.api.types.is_numeric_dtype(
-            target
-        ):
+        if not pd.api.types.is_numeric_dtype(target):
             return "classification"
 
-        # Numeric target
-        unique_count = target.nunique(
-            dropna=True
-        )
+        unique_count = target.nunique(dropna=True)
 
-        # Binary numeric target
         if unique_count <= 2:
             return "classification"
 
-        # Continuous numeric target
+        # Small-cardinality integer targets are generally classes,
+        # while genuinely continuous numeric targets are regression.
+        if (
+            pd.api.types.is_integer_dtype(target)
+            and unique_count <= min(20, max(2, int(len(target) * 0.05)))
+        ):
+            return "classification"
+
         return "regression"

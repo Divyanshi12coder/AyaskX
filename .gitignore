@@ -41,3 +41,24 @@ Thumbs.db
 
 # Logs
 *.log
+# Generated reports / dumps
+architecture_dump.txt
+architecture_code_dump.txt
+profile_output.txt
+dataset_inventory.txt
+AYASKX_CORE_DUMP.txt
+orchestrator_clipboard.txt
+orchestrator_full.txt
+patch_orchestrator.txt
+
+# Local database
+*.db
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/
+
+# Backup / temporary source files
+*.backup
+*.broken

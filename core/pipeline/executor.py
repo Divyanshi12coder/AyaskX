@@ -593,8 +593,7 @@ class PipelineExecutor:
 
         return schema
 
-
-    # =========================================================
+        # =========================================================
     # CONTEXT PROPAGATION
     # =========================================================
 
@@ -607,6 +606,10 @@ class PipelineExecutor:
         if context is None:
             return result
 
+        # Node may mutate and return the same context object.
+        # Never assign context.value = context in that case.
+        if result is context:
+            return context
 
         setter = getattr(
             context,
@@ -615,61 +618,75 @@ class PipelineExecutor:
         )
 
         if callable(setter):
-
             setter(result)
-
             return context
-
 
         if hasattr(
             context,
             "value",
         ):
-
             try:
-
                 context.value = result
-
                 return context
-
             except Exception:
                 pass
 
-
         return result
 
+    
 
+
+
+    
+
+        # =========================================================
+    # RECOVERY INFORMATION
+    # =========================================================
+
+    def last_known_good_checkpoint(
+        self,
+        execution: Any,
+    ):
+        """
+        Return the latest valid checkpoint associated with
+        the supplied pipeline execution.
+
+        Accepts either:
+        - PipelineExecution
+        - execution_id string
+
+        Returns None when no successful checkpoint exists.
+        """
+
+        execution_id = getattr(
+            execution,
+            "execution_id",
+            execution,
+        )
+
+        return (
+            self.checkpoint_manager.last_known_good(
+                execution_id=str(execution_id)
+            )
+        )      
     # =========================================================
     # HISTORY
     # =========================================================
 
     def history(
         self,
-    ) -> tuple[
-        PipelineExecution,
-        ...
-    ]:
+    ) -> tuple[PipelineExecution, ...]:
+        """
+        Return immutable execution history.
 
-        return tuple(
-            self._history
-        )
+        Existing executions are never modified.
+        """
+
+        return tuple(self._history)
 
 
-    # =========================================================
-    # RECOVERY INFORMATION
-    # =========================================================
-
-    def last_known_good_checkpoint(
-        self,
-        execution_id: str,
-    ):
-
-        return (
-            self.checkpoint_manager
-            .last_known_good(
-                execution_id=execution_id
-            )
-        )
+        
+    
 
 
     # =========================================================

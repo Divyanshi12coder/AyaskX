@@ -138,33 +138,52 @@ class CheckpointManager:
     # ---------------------------------------------------------
 
     def last_known_good(
-        self,
-        execution_id: str | None = None,
-    ) -> Checkpoint | None:
+    self,
+    execution_id: str | None = None,
+) -> Checkpoint | None:
+        
+        
+        """
+        Return the most recent validated checkpoint.
+
+        If execution_id is supplied, only checkpoints belonging
+        to that execution are considered.
+        """
+        
 
         candidates = [
+            
             checkpoint
-            for checkpoint
-            in self._checkpoints.values()
+            for checkpoint in self._checkpoints.values()
             if checkpoint.validation_status == "passed"
         ]
+    
 
         if execution_id is not None:
+            
             candidates = [
+                
                 checkpoint
                 for checkpoint in candidates
-                if checkpoint.execution_id
-                == execution_id
+                if checkpoint.execution_id == execution_id
             ]
-
+        
         if not candidates:
+
             return None
+        
 
         return max(
+            
             candidates,
-            key=lambda checkpoint:
-                checkpoint.created_at,
+            key=lambda checkpoint: checkpoint.created_at,
         )
+
+    
+
+    
+
+    
 
     # ---------------------------------------------------------
     # ARTIFACT RESTORE
@@ -209,27 +228,37 @@ class CheckpointManager:
     # ---------------------------------------------------------
     # HASHING
     # ---------------------------------------------------------
-
     @staticmethod
     def _hash_artifact(
         artifact: Any,
     ) -> str:
+        """
+        Return a deterministic SHA-256 hash of an artifact.
 
-        if artifact is None:
-            return ""
+        The same serialized artifact must always produce
+        the same hash so checkpoint integrity can be verified.
+        """
 
-        payload = CheckpointManager._serialize(
+        serialized = CheckpointManager._serialize(
             artifact
         )
 
         return hashlib.sha256(
-            payload.encode("utf-8")
+            serialized.encode("utf-8")
         ).hexdigest()
 
+    
     @staticmethod
     def _serialize(
         artifact: Any,
     ) -> str:
+
+        if artifact is None:
+            return "null"
+
+        # ---------------------------------------------------------
+        # Native JSON-compatible values
+        # ---------------------------------------------------------
 
         if isinstance(
             artifact,
@@ -241,10 +270,29 @@ class CheckpointManager:
                     sort_keys=True,
                     default=str,
                 )
-            except TypeError:
+            except (TypeError, ValueError):
                 pass
 
+        # ---------------------------------------------------------
+        # Dataclass objects
+        # ---------------------------------------------------------
+
+        try:
+            from dataclasses import is_dataclass, asdict
+
+            if is_dataclass(artifact):
+                return json.dumps(
+                    asdict(artifact),
+                    sort_keys=True,
+                    default=str,
+                )
+        except Exception:
+            pass
+
+        # ---------------------------------------------------------
         # pandas-like objects
+        # ---------------------------------------------------------
+
         to_dict = getattr(
             artifact,
             "to_dict",
@@ -252,13 +300,45 @@ class CheckpointManager:
         )
 
         if callable(to_dict):
-            return json.dumps(
-                to_dict(),
-                sort_keys=True,
-                default=str,
-            )
+            try:
+                return json.dumps(
+                    to_dict(),
+                    sort_keys=True,
+                    default=str,
+                )
+            except (TypeError, ValueError):
+                pass
 
-        return repr(artifact)
+        # ---------------------------------------------------------
+        # Generic object with __dict__
+        # ---------------------------------------------------------
+
+        object_dict = getattr(
+            artifact,
+            "__dict__",
+            None,
+        )
+
+        if isinstance(
+            object_dict,
+            dict,
+        ):
+            try:
+                return json.dumps(
+                    object_dict,
+                    sort_keys=True,
+                    default=str,
+                )
+            except (TypeError, ValueError):
+                pass
+
+        # ---------------------------------------------------------
+        # Final fallback
+        # ---------------------------------------------------------
+
+        return json.dumps(
+            repr(artifact)
+        )
 
     # ---------------------------------------------------------
     # STORAGE

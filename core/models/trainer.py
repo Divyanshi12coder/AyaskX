@@ -5,7 +5,9 @@ import pandas as pd
 
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (
+    ExtraTreesClassifier,
     GradientBoostingClassifier,
+    ExtraTreesRegressor,
     GradientBoostingRegressor,
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
@@ -236,7 +238,7 @@ class ModelTrainer:
                 )
 
             except Exception:
-                # Skip this candidate — a single model failure should not
+                # Skip this candidate â€” a single model failure should not
                 # prevent other candidates from being evaluated.
                 continue
 
@@ -619,6 +621,19 @@ class ModelTrainer:
                     random_state=random_state,
                 ),
         }
+        # ---------------- EXTRA TREES ----------------
+
+        models["extra_trees_regressor"] = ExtraTreesRegressor(
+            n_estimators=200,
+            random_state=random_state,
+            n_jobs=-1,
+        )
+
+        models["extra_trees_classifier"] = ExtraTreesClassifier(
+            n_estimators=200,
+            random_state=random_state,
+            n_jobs=-1,
+        )
 
         if model_name not in models:
             raise ValueError(
