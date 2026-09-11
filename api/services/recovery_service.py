@@ -71,10 +71,19 @@ class RecoveryService:
 
         nodes = []
         for n in rec.get("nodes", []):
+            raw_status = str(n.get("status") or "").lower()
+            # Older filesystem records persisted Enum.__str__ values such as
+            # "NodeStatus.FAILED".  Accept both that legacy representation
+            # and the current API wire value.
+            if raw_status.startswith("nodestatus."):
+                raw_status = raw_status.rsplit(".", 1)[-1]
             try:
-                st = NodeStatus[n["status"].upper()] if n.get("status") else NodeStatus.UNKNOWN
+                st = NodeStatus(raw_status)
             except Exception:
-                st = NodeStatus.UNKNOWN
+                # There is intentionally no UNKNOWN NodeStatus.  A malformed
+                # persisted status must remain a failed node so recovery
+                # cannot treat unknown state as safe to resume.
+                st = NodeStatus.FAILED
             nodes.append(NodeExecution(
                 execution_id=execution_id,
                 node_id=n.get("node_id", "unknown"),

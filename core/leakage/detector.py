@@ -17,6 +17,20 @@ class LeakageReport:
     safe_features: tuple[str, ...]
     risky_features: tuple[str, ...]
 
+    def to_dict(self) -> dict[str, object]:
+        risks = {finding.risk for finding in self.findings}
+        risk = "high" if "high" in risks else "medium" if "medium" in risks else "none"
+        return {
+            "target": self.target,
+            "leakage_risk": risk,
+            "leaky_columns": list(self.risky_features),
+            "safe_features": list(self.safe_features),
+            "findings": [
+                {"column": finding.column, "risk": finding.risk, "reason": finding.reason}
+                for finding in self.findings
+            ],
+        }
+
 
 class LeakageDetector:
 

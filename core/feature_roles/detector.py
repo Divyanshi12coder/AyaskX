@@ -39,6 +39,33 @@ class FeatureRoleReport:
     text_columns: tuple[str, ...]
     unknown_columns: tuple[str, ...]
 
+    def to_dict(self) -> dict[str, object]:
+        role_map = {item.column: item.role for item in self.roles}
+        dropped = list(self.identifier_columns) + list(self.unknown_columns)
+        return {
+            "target": self.target,
+            "roles": role_map,
+            "role_details": [
+                {"column": item.column, "role": item.role,
+                 "confidence": item.confidence, "reason": item.reason}
+                for item in self.roles
+            ],
+            "features": [
+                item.column for item in self.roles
+                if item.role in {"numeric", "categorical", "boolean", "text", "spatial", "temporal"}
+            ],
+            "dropped_columns": dropped,
+            "target_columns": list(self.target_columns),
+            "identifier_columns": list(self.identifier_columns),
+            "spatial_columns": list(self.spatial_columns),
+            "temporal_columns": list(self.temporal_columns),
+            "numeric_columns": list(self.numeric_columns),
+            "categorical_columns": list(self.categorical_columns),
+            "boolean_columns": list(self.boolean_columns),
+            "text_columns": list(self.text_columns),
+            "unknown_columns": list(self.unknown_columns),
+        }
+
 
 class FeatureRoleDetector:
 

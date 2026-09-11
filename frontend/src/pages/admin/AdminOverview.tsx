@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { healthApi } from '../../api/endpoints';
+import { healthApi, systemApi } from '../../api/endpoints';
 import { useApi } from '../../hooks/useApi';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { LoadingState } from '../../components/ui/LoadingState';
@@ -21,6 +21,7 @@ function KV({ k, v }: { k: string; v: React.ReactNode }) {
 export default function AdminOverview() {
   const { data: health, loading } = useApi(() => healthApi.get());
   const { data: ready } = useApi(() => healthApi.ready().catch(() => null));
+  const { data: system } = useApi(() => systemApi.status().catch(() => null));
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -37,7 +38,7 @@ export default function AdminOverview() {
               <LoadingState inline />
             ) : (
               <div className="kv-grid">
-                <KV k="API Version" v="1.0.0" />
+                <KV k="API Version" v={system?.api.version ?? 'â€”'} />
                 <KV k="Service" v={health?.service ?? '—'} />
                 <KV
                   k="Backend Status"
@@ -61,15 +62,15 @@ export default function AdminOverview() {
           </div>
 
           <div className="panel" style={{ padding: 16 }}>
-            <h4 style={{ marginBottom: 12 }}>Environment</h4>
+            <h4 style={{ marginBottom: 12 }}>Backend Dependencies</h4>
             <div className="kv-grid">
-              <KV k="API Host" v={<span className="mono">0.0.0.0:8000</span>} />
-              <KV k="Checkpoint Root" v={<span className="mono">.ayask_checkpoints/</span>} />
-              <KV k="Artifact Root" v={<span className="mono">.ayask_artifacts/</span>} />
-              <KV k="Upload Root" v={<span className="mono">.ayask_uploads/</span>} />
-              <KV k="Store Root" v={<span className="mono">.ayask_store/</span>} />
-              <KV k="Max Upload" v="200 MB" />
-              <KV k="DB" v={<span className="mono">ayaskx.db (SQLite)</span>} />
+              <KV k="Database" v={<StatusBadge value={system?.database.status ?? 'unknown'} />} />
+              <KV k="Database Dialect" v={system?.database.dialect ?? 'â€”'} />
+              <KV k="Upload Storage" v={<StatusBadge value={system?.storage.uploads_ready ? 'ready' : 'unavailable'} />} />
+              <KV k="Artifact Storage" v={<StatusBadge value={system?.storage.artifacts_ready ? 'ready' : 'unavailable'} />} />
+              <KV k="Checkpoint Storage" v={<StatusBadge value={system?.storage.checkpoints_ready ? 'ready' : 'unavailable'} />} />
+              <KV k="Datasets" v={system?.counts.datasets ?? 'â€”'} />
+              <KV k="Executions" v={system?.counts.executions ?? 'â€”'} />
             </div>
           </div>
 
@@ -85,9 +86,8 @@ export default function AdminOverview() {
                 color: 'var(--status-warning)',
               }}
             >
-              Authentication and RBAC are not implemented in the current backend.
-              All endpoints are open. Implement AYASKX_SECRET_KEY and JWT middleware
-              to enforce access control.
+              Authentication is currently {system?.runtime.authentication ?? 'not configured'}.
+              All endpoints remain open until a server-side authentication provider is configured.
             </div>
           </div>
 
@@ -98,8 +98,8 @@ export default function AdminOverview() {
                 k="Status"
                 v={<StatusBadge value={ready ? 'ready' : 'unknown'} />}
               />
-              <KV k="Executor" v="Background thread (daemon)" />
-              <KV k="Parallelism" v="Sequential (per execution)" />
+              <KV k="Executor" v={system?.runtime.execution_mode ?? 'â€”'} />
+              <KV k="Parallelism" v="Sequential per execution" />
             </div>
           </div>
         </div>

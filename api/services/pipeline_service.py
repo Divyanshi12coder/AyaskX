@@ -127,6 +127,7 @@ class PipelineService:
         try:
             result = self._orch.run(
                 df,
+                execution_id=execution_id,
                 dataset_path=dataset_path,
                 target=target,
                 task_type=task_type,
@@ -203,7 +204,10 @@ class PipelineService:
         for n in nodes:
             out.append({
                 "node_id": getattr(n, "node_id", None),
-                "status": str(getattr(n, "status", "")),
+                # Persist the wire value rather than Enum.__str__ (for
+                # example, "failed", not "NodeStatus.FAILED").  The latter
+                # cannot be reconstructed reliably by the recovery API.
+                "status": getattr(getattr(n, "status", None), "value", getattr(n, "status", "")),
                 "started_at": str(getattr(n, "started_at", "")),
                 "finished_at": str(getattr(n, "finished_at", "")),
                 "error_type": getattr(n, "error_type", None),
@@ -218,9 +222,9 @@ class PipelineService:
         if ckpt_mgr is None:
             return []
         try:
-            all_ckpts = ckpt_mgr._checkpoints
+            all_ckpts = ckpt_mgr.list()
             out = []
-            for ckpt in all_ckpts.values():
+            for ckpt in all_ckpts:
                 if getattr(ckpt, "execution_id", None) == execution_id:
                     out.append({
                         "checkpoint_id": ckpt.checkpoint_id,

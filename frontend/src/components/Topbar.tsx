@@ -5,7 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
-import { healthApi } from '../api/endpoints';
+import { systemApi } from '../api/endpoints';
 import type { SystemStatus } from '../types';
 
 function Dot({ ok }: { ok: boolean | null }) {
@@ -20,41 +20,15 @@ interface Chip {
 }
 
 export function Topbar() {
-  const [status, setStatus] = useState<SystemStatus>({
-    system: 'unknown',
-    backend: 'disconnected',
-    database: 'unknown',
-    pipeline_engine: 'unknown',
-    self_healing: 'unknown',
-  });
+  const [status, setStatus] = useState<SystemStatus | null>(null);
   const [checking, setChecking] = useState(false);
 
   async function check() {
     setChecking(true);
     try {
-      await healthApi.get();
-      let readyOk = false;
-      try {
-        await healthApi.ready();
-        readyOk = true;
-      } catch {
-        readyOk = false;
-      }
-      setStatus({
-        system: readyOk ? 'healthy' : 'degraded',
-        backend: 'connected',
-        database: readyOk ? 'connected' : 'error',
-        pipeline_engine: readyOk ? 'ready' : 'failed',
-        self_healing: readyOk ? 'operational' : 'degraded',
-      });
+      setStatus(await systemApi.status());
     } catch {
-      setStatus({
-        system: 'critical',
-        backend: 'disconnected',
-        database: 'error',
-        pipeline_engine: 'failed',
-        self_healing: 'degraded',
-      });
+      setStatus(null);
     } finally {
       setChecking(false);
     }
@@ -69,23 +43,23 @@ export function Topbar() {
   const chips: Chip[] = [
     {
       label: 'System',
-      value: status.system,
-      ok: status.system === 'healthy' ? true : status.system === 'critical' ? false : null,
+      value: status?.api.status ?? 'unavailable',
+      ok: status?.api.status === 'ready' ? true : status ? false : null,
     },
     {
       label: 'Backend',
-      value: status.backend,
-      ok: status.backend === 'connected',
+      value: status ? 'connected' : 'disconnected',
+      ok: status ? true : false,
     },
     {
       label: 'Pipeline Engine',
-      value: status.pipeline_engine,
-      ok: status.pipeline_engine === 'ready' || status.pipeline_engine === 'running',
+      value: status?.runtime.execution_mode.replace(/_/g, ' ') ?? 'unavailable',
+      ok: status ? true : null,
     },
     {
-      label: 'Self-Healing',
-      value: status.self_healing,
-      ok: status.self_healing === 'operational',
+      label: 'Database',
+      value: status?.database.status ?? 'unavailable',
+      ok: status?.database.status === 'ready' ? true : status ? false : null,
     },
   ];
 

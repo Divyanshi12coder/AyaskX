@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Query, status
 
 from api.config import Settings, get_settings
 from api.dependencies import get_dataset_store
@@ -60,23 +60,44 @@ def get_dataset(dataset_id: str, svc: DatasetService = Depends(_svc)):
 
 # GET /v1/datasets/{dataset_id}/profile
 @router.get("/{dataset_id}/profile")
-def get_profile(dataset_id: str, svc: DatasetService = Depends(_svc)):
+def get_profile(
+    dataset_id: str,
+    target: str | None = Query(default=None),
+    svc: DatasetService = Depends(_svc),
+):
     if not svc.get_metadata(dataset_id):
         raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found")
-    return ApiResponse.ok(svc.get_profile(dataset_id))
+    try:
+        return ApiResponse.ok(svc.get_profile(dataset_id, target=target))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 # GET /v1/datasets/{dataset_id}/feature-roles
 @router.get("/{dataset_id}/feature-roles")
-def get_feature_roles(dataset_id: str, svc: DatasetService = Depends(_svc)):
+def get_feature_roles(
+    dataset_id: str,
+    target: str | None = Query(default=None),
+    svc: DatasetService = Depends(_svc),
+):
     if not svc.get_metadata(dataset_id):
         raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found")
-    return ApiResponse.ok(svc.get_feature_roles(dataset_id))
+    try:
+        return ApiResponse.ok(svc.get_feature_roles(dataset_id, target=target))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 # GET /v1/datasets/{dataset_id}/leakage
 @router.get("/{dataset_id}/leakage")
-def get_leakage(dataset_id: str, svc: DatasetService = Depends(_svc)):
+def get_leakage(
+    dataset_id: str,
+    target: str | None = Query(default=None),
+    svc: DatasetService = Depends(_svc),
+):
     if not svc.get_metadata(dataset_id):
         raise HTTPException(status_code=404, detail=f"Dataset '{dataset_id}' not found")
-    return ApiResponse.ok(svc.get_leakage(dataset_id))
+    try:
+        return ApiResponse.ok(svc.get_leakage(dataset_id, target=target))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
