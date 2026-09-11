@@ -33,7 +33,7 @@ from api.exceptions import (
     unsupported_file_handler,
     validation_error_handler,
 )
-from api.routers import audit, datasets, health, inference, models, pipelines, recovery
+from api.routers import audit, datasets, health, inference, integrity, models, observability, pipelines, recovery, system
 
 
 def _configure_logging(level: str) -> None:
@@ -50,6 +50,12 @@ def create_app() -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        # Schema creation is idempotent for the supported SQLAlchemy models and
+        # makes a fresh local deployment usable without a manual bootstrap
+        # command. Migration tooling can later replace this for schema changes.
+        from core.database.connection import init_db
+
+        init_db()
         logging.getLogger("ayaskx.api").info(
             "AyaskX API starting. checkpoint_root=%s artifact_root=%s cors=%s",
             settings.checkpoint_root,
@@ -129,6 +135,9 @@ def create_app() -> FastAPI:
     app.include_router(inference.router)
     app.include_router(recovery.router)
     app.include_router(audit.router)
+    app.include_router(system.router)
+    app.include_router(observability.router)
+    app.include_router(integrity.router)
 
     # Routers registered above; lifespan handles startup
     return app

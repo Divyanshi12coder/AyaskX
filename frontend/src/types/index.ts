@@ -24,6 +24,7 @@ export interface HealthStatus {
 
 export interface ReadyStatus {
   status: string;
+  database?: string;
   timestamp: string;
 }
 
@@ -247,10 +248,33 @@ export interface PredictResult {
 // ─── System Status (derived, not from single endpoint) ───────────────────────
 
 export interface SystemStatus {
-  system: 'healthy' | 'degraded' | 'critical' | 'unknown';
-  backend: 'connected' | 'disconnected';
-  database: 'connected' | 'error' | 'unknown';
-  pipeline_engine: 'ready' | 'running' | 'failed' | 'unknown';
-  self_healing: 'operational' | 'degraded' | 'unknown';
-  started_at?: string;
+  api: { status: string; version: string };
+  database: { status: string; dialect: string | null };
+  storage: {
+    uploads_ready: boolean;
+    artifacts_ready: boolean;
+    checkpoints_ready: boolean;
+    execution_store_ready: boolean;
+  };
+  counts: { datasets: number; executions: number };
+  runtime: { execution_mode: string; authentication: string };
+  timestamp: string;
+}
+
+export interface IntegrityArtifact {
+  artifact_name: string;
+  artifact_path: string;
+  execution_id: string;
+  status: string;
+  valid: boolean;
+  reason: string;
+  expected_checksum?: string | null;
+  actual_checksum?: string | null;
+}
+
+export interface ObservabilitySummary {
+  total_executions: number;
+  status_counts: Record<string, number>;
+  latest_execution_at: string | null;
+  generated_at: string;
 }

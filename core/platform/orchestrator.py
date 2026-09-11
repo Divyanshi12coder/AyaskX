@@ -562,6 +562,7 @@ class AyaskXOrchestrator:
         self,
         df: pd.DataFrame,
         *,
+        execution_id: str | None = None,
         dataset_path: str = "unknown",
         target: str | None = None,
         task_type: str | None = None,
@@ -575,9 +576,11 @@ class AyaskXOrchestrator:
         an unhandled pipeline exception to the caller.
         """
 
-        execution_id = str(
-            uuid.uuid4()
-        )
+        # API callers may allocate an execution ID before dispatching work so
+        # that HTTP status, checkpoints, artifacts, and core persistence all
+        # share one traceable identifier. Direct core callers keep the prior
+        # behaviour of receiving a new UUID for every run.
+        execution_id = execution_id or str(uuid.uuid4())
 
         started_at = _utc_now()
 

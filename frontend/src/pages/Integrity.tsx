@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { pipelinesApi } from '../api/endpoints';
-import type { CheckpointRecord, ExecutionRecord } from '../types';
+import { integrityApi, pipelinesApi } from '../api/endpoints';
+import type { CheckpointRecord, ExecutionRecord, IntegrityArtifact } from '../types';
 import { useApi } from '../hooks/useApi';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingState } from '../components/ui/LoadingState';
@@ -16,6 +16,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 
 export default function Integrity() {
   const { data, loading, error, refetch } = useApi(() => pipelinesApi.list());
+  const { data: artifacts, loading: artifactsLoading } = useApi(() => integrityApi.artifacts());
 
   const allCheckpoints: (CheckpointRecord & { dataset_path?: string })[] = (data ?? []).flatMap(
     (ex: ExecutionRecord) =>
@@ -51,8 +52,8 @@ export default function Integrity() {
             color: 'var(--status-info)',
           }}
         >
-          Note: No dedicated integrity API endpoint exists. Data below is derived from checkpoint
-          validation records.
+          Artifact checks are verified by the backend against server-managed integrity manifests.
+          Checkpoint validation records are shown separately below.
         </div>
 
         {loading ? (
@@ -88,6 +89,31 @@ export default function Integrity() {
             </div>
 
             <div className="section">
+              <div className="section-header">
+                <span className="section-title">Model Artifact Verification</span>
+              </div>
+              <div className="panel" style={{ padding: 0, marginBottom: 20 }}>
+                {artifactsLoading ? (
+                  <LoadingState inline />
+                ) : !(artifacts as IntegrityArtifact[] | undefined)?.length ? (
+                  <EmptyState title="No model artifacts" message="Verified artifacts appear after a successful pipeline run." />
+                ) : (
+                  <table className="data-table">
+                    <thead><tr><th>Artifact</th><th>Execution</th><th>Status</th><th>Reason</th></tr></thead>
+                    <tbody>
+                      {(artifacts as IntegrityArtifact[]).map((artifact) => (
+                        <tr key={artifact.artifact_name}>
+                          <td className="mono">{artifact.artifact_name}</td>
+                          <td className="mono">{artifact.execution_id.slice(0, 14)}â€¦</td>
+                          <td><StatusBadge value={artifact.status} /></td>
+                          <td>{artifact.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
               <div className="section-header">
                 <span className="section-title">Checkpoint Integrity Records</span>
               </div>

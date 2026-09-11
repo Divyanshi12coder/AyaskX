@@ -132,10 +132,40 @@ class TestHealth:
         assert "started_at" in body
         assert "timestamp" in body
 
+    def test_ready_initializes_and_verifies_database(self, client):
+        response = client.get("/ready")
+        assert response.status_code == 200
+        assert response.json()["status"] == "ready"
+        assert response.json()["database"] == "ready"
+
     def test_ready_200(self, client):
         r = client.get("/ready")
         assert r.status_code == 200
         assert r.json()["status"] == "ready"
+
+    def test_system_status_reports_real_dependencies(self, client):
+        response = client.get("/v1/system/status")
+        assert response.status_code == 200
+        assert_envelope(response)
+        data = response.json()["data"]
+        assert data["api"]["status"] == "ready"
+        assert data["database"]["status"] == "ready"
+        assert data["storage"]["uploads_ready"] is True
+        assert data["runtime"]["authentication"] == "not_configured"
+
+    def test_observability_and_integrity_endpoints(self, client):
+        summary = client.get("/v1/observability/summary")
+        assert summary.status_code == 200
+        assert_envelope(summary)
+        assert "total_executions" in summary.json()["data"]
+
+        events = client.get("/v1/observability/events?limit=1")
+        assert events.status_code == 200
+        assert_envelope(events)
+
+        integrity = client.get("/v1/integrity/artifacts")
+        assert integrity.status_code == 200
+        assert_envelope(integrity)
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +228,14 @@ class TestDatasetUpload:
         assert r.status_code == 201
         assert r.json()["data"]["columns"] == 2
 
+    def test_upload_malformed_csv_is_rejected(self, client):
+        r = client.post(
+            "/v1/datasets/upload",
+            files={"file": ("bad.csv", io.BytesIO(b'column\n"unterminated'), "text/csv")},
+        )
+        assert r.status_code == 422
+        assert_envelope(r, status="error")
+
 
 # ---------------------------------------------------------------------------
 # Dataset retrieval
@@ -226,16 +264,24 @@ class TestDatasetRetrieval:
         r = client.get(f"/v1/datasets/{uploaded_dataset_id}/profile")
         assert r.status_code == 200
         assert_envelope(r)
+        profile = r.json()["data"]
+        assert profile["n_rows"] == 6
+        assert profile["n_cols"] == 3
+        assert isinstance(profile["columns"], list)
+        assert profile["duplicate_rows"] == 0
+        assert profile["target"] == "label"
 
     def test_get_feature_roles(self, client, uploaded_dataset_id):
         r = client.get(f"/v1/datasets/{uploaded_dataset_id}/feature-roles")
         assert r.status_code == 200
         assert_envelope(r)
+        assert r.json()["data"]["roles"]["age"] == "numeric"
 
     def test_get_leakage(self, client, uploaded_dataset_id):
         r = client.get(f"/v1/datasets/{uploaded_dataset_id}/leakage")
         assert r.status_code == 200
         assert_envelope(r)
+        assert r.json()["data"]["leakage_risk"] == "none"
 
     def test_profile_404(self, client):
         r = client.get("/v1/datasets/no-such/profile")

@@ -18,6 +18,25 @@ class ColumnCharacterization:
     missing_fraction: float
     unique_count: int
     unique_fraction: float
+    mean: float | None = None
+    std: float | None = None
+    minimum: float | None = None
+    maximum: float | None = None
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "name": self.name,
+            "dtype": self.dtype,
+            "semantic_role": self.semantic_role,
+            "missing_count": self.missing_count,
+            "missing_pct": self.missing_fraction,
+            "unique_count": self.unique_count,
+            "unique_fraction": self.unique_fraction,
+            "mean": self.mean,
+            "std": self.std,
+            "min": self.minimum,
+            "max": self.maximum,
+        }
 
 
 @dataclass(frozen=True)
@@ -44,6 +63,36 @@ class DatasetCharacterization:
     column_profiles: tuple[ColumnCharacterization, ...]
 
     dataset_role: str
+    duplicate_rows: int = 0
+
+    def to_dict(self) -> dict[str, object]:
+        """Stable API-friendly representation of observed dataset facts."""
+        return {
+            "path": self.path,
+            "rows": self.rows,
+            "columns": self.columns,
+            # Frontend/API aliases retained alongside the core naming.
+            "n_rows": self.rows,
+            "n_cols": self.columns,
+            "column_count": self.column_count,
+            "numeric_columns": list(self.numeric_columns),
+            "categorical_columns": list(self.categorical_columns),
+            "datetime_columns": list(self.datetime_columns),
+            "spatial_columns": list(self.spatial_columns),
+            "temporal_columns": list(self.temporal_columns),
+            "group_columns": list(self.group_columns),
+            "identifier_columns": list(self.identifier_columns),
+            "target_candidates": list(self.target_candidates),
+            "high_cardinality_columns": list(self.high_cardinality_columns),
+            "constant_columns": list(self.constant_columns),
+            "missing_columns": list(self.missing_columns),
+            "missing_total": sum(p.missing_count for p in self.column_profiles),
+            "duplicate_rows": self.duplicate_rows,
+            "columns_profile": [p.to_dict() for p in self.column_profiles],
+            # Existing UI contract uses this name.
+            "columns": [p.to_dict() for p in self.column_profiles],
+            "dataset_role": self.dataset_role,
+        }
 
 
 class DatasetCharacterizer:
@@ -184,6 +233,18 @@ class DatasetCharacterizer:
 
             dtype = str(series.dtype)
 
+            numeric_stats: dict[str, float | None] = {
+                "mean": None, "std": None, "minimum": None, "maximum": None,
+            }
+            if is_numeric_dtype(series) and not is_bool_dtype(series):
+                numeric = pd.to_numeric(series, errors="coerce")
+                numeric_stats = {
+                    "mean": _finite_float(numeric.mean()),
+                    "std": _finite_float(numeric.std()),
+                    "minimum": _finite_float(numeric.min()),
+                    "maximum": _finite_float(numeric.max()),
+                }
+
             missing_count = int(
                 series.isna().sum()
             )
@@ -296,6 +357,7 @@ class DatasetCharacterizer:
                     unique_fraction=float(
                         unique_fraction
                     ),
+                    **numeric_stats,
                 )
             )
 
@@ -363,6 +425,7 @@ class DatasetCharacterizer:
             ),
 
             dataset_role=dataset_role,
+            duplicate_rows=int(df.duplicated().sum()),
         )
 
     # ==========================================================
@@ -584,3 +647,12 @@ class DatasetCharacterizer:
         ):
 
             return None
+
+
+def _finite_float(value: object) -> float | None:
+    """Return JSON-safe numeric statistics without inventing a value for NaN."""
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return None
+    return numeric if pd.notna(numeric) else None

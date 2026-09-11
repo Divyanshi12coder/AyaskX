@@ -57,15 +57,17 @@ def predict(
             )
         from core.inference.engine import InferenceEngine, ModelArtifact
         engine = InferenceEngine()
-        artifact = engine.load(artifact_files[0])
+        artifact = ModelArtifact.load(artifact_files[0])
         result = engine.predict(artifact, request)
+        if not result.success:
+            raise HTTPException(status_code=422, detail=result.message)
         predictions = result.predictions.tolist() if hasattr(result.predictions, "tolist") else list(result.predictions)
         return ApiResponse.ok(
             {
                 "predictions": predictions,
                 "request_id": result.request_id,
                 "model_name": result.model_name,
-                "n_samples": result.n_samples,
+                "n_samples": result.input_rows,
             },
             execution_id=execution_id,
         )

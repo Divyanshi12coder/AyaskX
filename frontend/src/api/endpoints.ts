@@ -26,6 +26,9 @@ import type {
   RecoveryResult,
   RootCauseInfo,
   SelfHealingReport,
+  SystemStatus,
+  IntegrityArtifact,
+  ObservabilitySummary,
 } from '../types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -39,6 +42,23 @@ function data<T>(res: AxiosResponse<ApiResponse<T>>): T {
 export const healthApi = {
   get: () => apiClient.get<HealthStatus>('/health').then((r) => r.data),
   ready: () => apiClient.get<ReadyStatus>('/ready').then((r) => r.data),
+};
+
+export const systemApi = {
+  status: () => apiClient.get<ApiResponse<SystemStatus>>('/v1/system/status').then(data),
+};
+
+export const observabilityApi = {
+  summary: () => apiClient.get<ApiResponse<ObservabilitySummary>>('/v1/observability/summary').then(data),
+  events: (executionId?: string) => apiClient.get<ApiResponse<unknown[]>>('/v1/observability/events', {
+    params: executionId ? { execution_id: executionId } : {},
+  }).then(data),
+};
+
+export const integrityApi = {
+  artifacts: (executionId?: string) => apiClient.get<ApiResponse<IntegrityArtifact[]>>('/v1/integrity/artifacts', {
+    params: executionId ? { execution_id: executionId } : {},
+  }).then(data),
 };
 
 // ─── Datasets ────────────────────────────────────────────────────────────────
